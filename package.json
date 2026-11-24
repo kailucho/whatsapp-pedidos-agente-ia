@@ -1,0 +1,12 @@
+{
+  "name": "whatsapp-pedidos-agente-ia",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Agente de IA para tomar pedidos por WhatsApp Cloud API (proyecto personal de practica)",
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/main.ts",
+    "test": "node --test test/*.test.ts"
+  }
+}
