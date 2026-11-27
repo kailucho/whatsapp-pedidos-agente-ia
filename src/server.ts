@@ -77,6 +77,7 @@ export function createApp(cfg: AppConfig, db: Db, llm: Llm, fetchImpl: typeof fe
       if (url.pathname === '/webhook' && req.method === 'POST') {
         const raw = await readBody(req);
         if (!verifySignature(raw, req.headers['x-hub-signature-256'] as string | undefined, cfg.appSecret)) {
+          console.warn('webhook rechazado: firma invalida o ausente');
           return send(401, 'bad signature');
         }
         let payload: unknown;
