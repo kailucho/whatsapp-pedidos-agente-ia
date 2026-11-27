@@ -11,7 +11,7 @@ Proyecto personal de práctica: un agente de IA que atiende clientes por **Whats
 | Envío de mensajes (`POST /{phone-number-id}/messages`) | Hecho y **probado con la API real de Meta**: mensaje entregado a un teléfono real |
 | Agente con herramientas (catálogo, pedido, pasar a persona) y control de precios | Hecho y probado con un modelo **simulado** |
 | **Probado contra WhatsApp real** | **Sí, con número de prueba de Meta** (26-nov-2026, ver abajo) |
-| Mensajes entrantes escritos desde un celular real | Pendiente: Meta solo los entrega cuando la app está publicada |
+| Mensajes entrantes escritos desde un WhatsApp real | **Probado** (27-nov-2026): catálogo y pedido completo con total calculado en código y aviso al dueño |
 | Probado con un LLM real | No todavía (hay cliente compatible con OpenAI, sin ejecutar) |
 | En producción con número de empresa verificado | No |
 
@@ -28,6 +28,15 @@ App de Meta en modo desarrollo, número de prueba `+1 555 153 0068`, webhook exp
 | Webhook de prueba firmado enviado por Meta | Firma HMAC validada y mensaje procesado; la respuesta al número ficticio del ejemplo fue rechazada por Meta (`#131030`, destinatario fuera de la lista), como corresponde |
 | Mensajes firmados con el App Secret simulando al cliente | Respondidos con el catálogo por la Cloud API |
 | Reenvío del mismo `id` de mensaje (reintento) | Ignorado: no se contestó dos veces |
+
+### Conversación real (27-nov-2026)
+
+Desde una cuenta de WhatsApp real al número de prueba, con la app publicada:
+
+1. "hola, que productos tienen?" → catálogo con precios leídos de la base de datos.
+2. "quiero 2 brownie y 1 cafe latte" → "Listo, pedido #1 registrado: 2 x Brownie, 1 x Cafe latte. Total S/ 24.00", y aviso de nuevo pedido al número del dueño.
+
+Para que Meta entregue los mensajes hubo que, además de publicar la app, suscribirla a la cuenta de WhatsApp Business (`POST /{waba-id}/subscribed_apps`): sin eso el webhook verificaba bien pero nunca recibía mensajes.
 
 Hallazgo de la prueba real: el bot registraba la respuesta como enviada aunque Meta la rechazara. Corregido (ahora se registra solo si Meta acepta el envío) y cubierto con una prueba.
 
