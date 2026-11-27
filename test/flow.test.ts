@@ -108,6 +108,8 @@ describe('agente: pedidos, catalogo y seguridad', () => {
   });
 });
 
+const RECHAZADO = '51900000000';
+
 describe('servidor HTTP del webhook', () => {
   let app: App;
   let base: string;
@@ -117,7 +119,10 @@ describe('servidor HTTP del webhook', () => {
     db = openDb();
     seed(db);
     const fakeFetch = (async (_url: string, init: any) => {
-      enviados.push(JSON.parse(init.body).text.body);
+      const msg = JSON.parse(init.body);
+      // Como en la API real: un destinatario fuera de la lista permitida da 400 (#131030)
+      if (msg.to === RECHAZADO) return new Response('{"error":{"code":131030}}', { status: 400 });
+      enviados.push(msg.text.body);
       return new Response('{}', { status: 200 });
     }) as unknown as typeof fetch;
     app = createApp(
@@ -157,5 +162,14 @@ describe('servidor HTTP del webhook', () => {
     assert.equal((await fetch(`${base}/webhook`, { method: 'POST', body, headers })).status, 200);
     await app.idle();
     assert.equal(enviados.length, 1);
+  });
+
+  it('si Meta rechaza el envio, la respuesta no queda registrada como enviada', async () => {
+    const body = JSON.stringify(payload('wamid.rechazo', RECHAZADO, 'hola'));
+    const headers = { 'x-hub-signature-256': sign(body), 'content-type': 'application/json' };
+    assert.equal((await fetch(`${base}/webhook`, { method: 'POST', body, headers })).status, 200);
+    await app.idle();
+    const filas = db.prepare('SELECT direction FROM messages WHERE wa_id = ?').all(RECHAZADO) as { direction: string }[];
+    assert.deepEqual(filas.map((f) => f.direction), ['in']);
   });
 });

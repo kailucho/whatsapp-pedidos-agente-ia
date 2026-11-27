@@ -50,8 +50,9 @@ export function createApp(cfg: AppConfig, db: Db, llm: Llm, fetchImpl: typeof fe
       try {
         const reply = await handleMessage({ db, llm, notifyOwner }, m.from, m.text);
         if (reply) {
-          recordMessage(db, `out-${m.id}`, m.from, 'out', reply);
+          // Se registra solo si Meta acepto el envio: el historial no debe mostrar respuestas que el cliente nunca recibio.
           await sendText(cfg.wa, m.from, reply, fetchImpl);
+          recordMessage(db, `out-${m.id}`, m.from, 'out', reply);
         }
       } catch (e) {
         console.error('error procesando mensaje', m.id, (e as Error).message);
